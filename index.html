@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Read To Me</title>
+<meta name="theme-color" content="#0a0c10">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=Lexend:wght@400;500&family=Literata:opsz,wght@7..72,400;7..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c10; --card:#111318; --card2:#171a21; --line:#242834; --text:#e9ecf2; --muted:#8b92a5;
+  --gold:#f5c451; --green:#3ddc84; --red:#ff6b6b; --kidsize:30px;
+  --safe-b: env(safe-area-inset-bottom, 0px);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--text);font-family:Barlow,system-ui,sans-serif;font-size:16px;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:'Barlow Condensed',Barlow,sans-serif;letter-spacing:.3px;margin:0}
+a{color:var(--gold)}
+.hidden{display:none!important}
+header.top{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(10,12,16,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+header.top h1{font-size:24px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.top h1 .dot{color:var(--gold)}
+.iconbtn{background:var(--card2);border:1px solid var(--line);border-radius:12px;min-width:42px;height:42px;padding:0 10px;cursor:pointer;font-size:18px;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.iconbtn:active{transform:scale(.96)}
+main{max-width:860px;margin:0 auto;padding:14px 14px calc(120px + var(--safe-b))}
+.btn{background:var(--gold);color:#14110a;border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;font-size:16px}
+.btn.alt{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--red);border:1px solid #4a2a2a}
+.btn:disabled{opacity:.45}
+.btn.wide{width:100%}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px}
+.muted{color:var(--muted)}
+.small{font-size:13px}
+label.fld{display:block;margin:12px 0 4px;color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.6px}
+input[type=text],input[type=password],select,textarea{width:100%;background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px 12px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--gold)}
+textarea{resize:vertical;line-height:1.5}
+.row{display:flex;gap:10px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.status{font-size:14px;margin-top:8px;min-height:1em}
+.status.ok{color:var(--green)} .status.err{color:var(--red)}
+
+/* Library */
+.lib{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-top:14px}
+.book{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;position:relative;display:flex;flex-direction:column}
+.book .cov{aspect-ratio:3/4;background:#1b1f29 center/cover no-repeat;display:flex;align-items:flex-end;padding:10px}
+.book .cov.gen{align-items:center;justify-content:center;text-align:center;font-family:'Barlow Condensed';font-size:22px;line-height:1.1;padding:14px;color:#fff}
+.book .meta{padding:9px 10px 11px}
+.book .meta b{display:block;font-size:15px;line-height:1.2;max-height:2.4em;overflow:hidden}
+.book .meta span{font-size:12px;color:var(--muted)}
+.book .bar{height:4px;background:#232733}.book .bar i{display:block;height:100%;background:var(--gold)}
+.book .more{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);border:0;border-radius:10px;width:34px;height:34px;color:#fff;font-size:18px;cursor:pointer}
+.empty{text-align:center;padding:40px 10px}
+.empty .big{font-size:56px}
+.addtile{border:2px dashed var(--line);border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;min-height:200px;color:var(--muted);cursor:pointer;background:transparent}
+.addtile b{font-size:40px;color:var(--gold);line-height:1}
+
+/* Add */
+.choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.choice{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 12px;text-align:left;cursor:pointer}
+.choice .e{font-size:30px}
+.choice b{display:block;margin:6px 0 2px;font-size:16px}
+.choice span{font-size:13px;color:var(--muted)}
+.seg{display:flex;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;border-radius:9px;padding:9px 6px;cursor:pointer;font-weight:500}
+.seg button.on{background:var(--gold);color:#14110a}
+.thumbs{display:flex;gap:8px;overflow-x:auto;padding:8px 0}
+.thumbs .t{position:relative;flex:0 0 auto}
+.thumbs img{height:90px;border-radius:8px;display:block}
+.thumbs .t button{position:absolute;top:-6px;right:-6px;width:24px;height:24px;border-radius:50%;border:0;background:var(--red);color:#fff;font-size:13px;cursor:pointer}
+.thumbs .t i{position:absolute;bottom:4px;left:4px;background:rgba(0,0,0,.6);font-style:normal;font-size:11px;padding:1px 5px;border-radius:6px}
+
+/* Scanner */
+#scan{position:fixed;inset:0;background:#000;z-index:60;display:flex;flex-direction:column}
+#scan video{flex:1;width:100%;object-fit:cover;min-height:0}
+#scan .sbar{display:flex;align-items:center;justify-content:space-between;padding:16px 20px calc(20px + var(--safe-b));background:#000}
+#shutter{width:76px;height:76px;border-radius:50%;border:5px solid #fff;background:var(--gold);cursor:pointer}
+#shutter:active{transform:scale(.92)}
+#scanCount{min-width:90px;color:#fff;font-weight:600}
+#scanFlash{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none;transition:opacity .25s}
+#scan .tip{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:0;right:0;text-align:center;color:#fff;text-shadow:0 1px 4px #000;font-size:15px;padding:0 20px}
+#scanLast{width:60px;height:76px;border-radius:8px;object-fit:cover;background:#222}
+
+/* Editor */
+.chap{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:12px}
+.chap .row input{font-weight:600}
+.chap img{max-height:160px;border-radius:8px;display:block;margin:8px 0}
+.chap textarea{min-height:140px;margin-top:8px}
+
+/* Player */
+#vPlayer header.top h1{font-size:20px}
+.pHead{display:flex;gap:10px;align-items:center;margin-bottom:12px}
+.pHead select{flex:1}
+#pImgWrap{text-align:center;margin-bottom:14px}
+#pImg{max-width:100%;max-height:46vh;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+#reader{font-family:Literata,Georgia,serif;font-size:20px;line-height:1.75;padding:4px 2px;word-wrap:break-word}
+#reader p{margin:0 0 1em}
+#reader .w{border-radius:5px;cursor:pointer;transition:background .12s,color .12s;padding:0 1px}
+#reader .s-on{background:rgba(245,196,81,.13)}
+#reader .w-on{background:var(--gold);color:#14110a}
+#reader .noText{color:var(--muted);font-style:italic;text-align:center}
+body.kids #reader{background:#fffaf0;color:#1d1d1d;font-family:Lexend,sans-serif;font-size:var(--kidsize);line-height:1.85;padding:22px 20px;border-radius:18px;letter-spacing:.3px;word-spacing:4px}
+body.kids #reader .s-on{background:#fff0b3}
+body.kids #reader .w-on{background:#ffc928;color:#000;box-shadow:0 0 0 3px #ffc928}
+body.kids #pImg{max-height:52vh}
+.dock{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(17,19,24,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:10px 12px calc(10px + var(--safe-b))}
+.dock .in{max-width:860px;margin:0 auto}
+.dock .main{display:flex;align-items:center;justify-content:center;gap:22px;margin-bottom:10px}
+.dock .main button{background:var(--card2);border:1px solid var(--line);border-radius:50%;width:52px;height:52px;font-size:20px;cursor:pointer}
+.dock .main #pPlay{width:68px;height:68px;font-size:28px;background:var(--gold);color:#14110a;border:0}
+.dock .tools{display:flex;gap:8px;overflow-x:auto}
+.dock .tools > *{flex:0 0 auto}
+.dock .tools select{width:auto;max-width:190px;padding:8px 10px;font-size:14px}
+.dock .tools .iconbtn{height:38px;font-size:14px;border-radius:10px}
+.iconbtn.on{background:var(--gold);color:#14110a;border-color:var(--gold)}
+#pBusy{position:absolute;top:-30px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:4px 12px;font-size:13px;color:var(--gold);white-space:nowrap}
+
+/* Overlay + toast */
+#overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:80;display:flex;align-items:center;justify-content:center;padding:20px}
+#overlay .box{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:20px;width:100%;max-width:420px}
+.prog{height:10px;background:#232733;border-radius:6px;overflow:hidden;margin:14px 0 8px}
+.prog i{display:block;height:100%;width:0;background:var(--gold);transition:width .25s}
+#toast{position:fixed;left:50%;bottom:calc(150px + var(--safe-b));transform:translateX(-50%);background:#222734;border:1px solid var(--line);color:var(--text);padding:10px 16px;border-radius:12px;z-index:90;max-width:90vw;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.4);opacity:0;transition:opacity .2s;pointer-events:none}
+#toast.show{opacity:1}
+.menu{position:fixed;z-index:85;background:var(--card2);border:1px solid var(--line);border-radius:12px;overflow:hidden;min-width:170px;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.menu button{display:block;width:100%;text-align:left;background:none;border:0;padding:12px 16px;cursor:pointer}
+.menu button:hover{background:#20242e}
+.hint{background:#141822;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:14px;color:var(--muted);margin-top:10px}
+.sect{margin-top:18px}
+.sect h2{font-size:20px;margin-bottom:4px}
+input[type=range]{width:100%;accent-color:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- ============ LIBRARY ============ -->
+<section id="vLibrary">
+  <header class="top">
+    <h1>Read To Me<span class="dot">.</span></h1>
+    <button class="iconbtn" id="goSettings" title="Settings">⚙️</button>
+  </header>
+  <main>
+    <div id="libEmpty" class="empty hidden">
+      <div class="big">📚</div>
+      <h2>Your bookshelf is empty</h2>
+      <p class="muted">Scan a paper book, add an ebook or PDF, or paste some text — then listen, or read along with the kids.</p>
+      <div class="row" style="justify-content:center;margin-top:16px;flex-wrap:wrap">
+        <button class="btn" id="emptyAdd">＋ Add a book</button>
+        <button class="btn alt" id="emptySample">Try a sample story</button>
+      </div>
+    </div>
+    <div id="lib" class="lib"></div>
+  </main>
+</section>
+
+<!-- ============ ADD ============ -->
+<section id="vAdd" class="hidden">
+  <header class="top">
+    <button class="iconbtn" data-back>←</button>
+    <h1>Add a book</h1>
+  </header>
+  <main>
+    <label class="fld" for="addTitle">Book title</label>
+    <input type="text" id="addTitle" placeholder="e.g. The Gruffalo">
+
+    <label class="fld">What kind of book?</label>
+    <div class="seg" id="kindSeg">
+      <button data-k="picture">🧸 Picture book</button>
+      <button data-k="text" class="on">📖 Text book</button>
+    </div>
+    <div class="small muted" id="kindHint" style="margin-top:6px"></div>
+
+    <div class="choices">
+      <button class="choice" id="cScan"><div class="e">📷</div><b>Scan pages</b><span>Snap page after page with the camera</span></button>
+      <button class="choice" id="cPhotos"><div class="e">🖼️</div><b>Photos</b><span>Pick page photos you've already taken</span></button>
+      <button class="choice" id="cFile"><div class="e">📄</div><b>Ebook / PDF / text</b><span>EPUB, PDF or .txt file</span></button>
+      <button class="choice" id="cPaste"><div class="e">✍️</div><b>Paste text</b><span>Copy text from anywhere</span></button>
+    </div>
+    <input type="file" id="fPhotos" accept="image/*" multiple class="hidden">
+    <input type="file" id="fCamera" accept="image/*" capture="environment" class="hidden">
+    <input type="file" id="fBook" accept=".epub,.pdf,.txt,.md,application/epub+zip,application/pdf,text/plain" class="hidden">
+
+    <div id="pagesBox" class="card hidden" style="margin-top:14px">
+      <div class="row"><b style="flex:1"><span id="pageCount">0</span> pages ready</b><button class="btn alt" id="addMoreScan">＋ More</button></div>
+      <div class="thumbs" id="pageThumbs"></div>
+      <label class="fld">Text reader</label>
+      <div class="seg" id="ocrSeg">
+        <button data-o="free" class="on">Free (on phone)</button>
+        <button data-o="gemini">Gemini (best)</button>
+      </div>
+      <div class="small muted" id="ocrHint" style="margin-top:6px"></div>
+      <button class="btn wide" id="readPages" style="margin-top:14px">Read the pages ✨</button>
+    </div>
+
+    <div id="pasteBox" class="card hidden" style="margin-top:14px">
+      <textarea id="pasteText" rows="10" placeholder="Paste or type the text here. Start a line with # to begin a new chapter."></textarea>
+      <button class="btn wide" id="pasteGo" style="margin-top:10px">Next →</button>
+    </div>
+
+    <div class="hint">🔒 Everything stays on this device. Only the pages you choose to read with Gemini, or listen to with ElevenLabs voices, are sent to those services.</div>
+  </main>
+</section>
+
+<!-- ============ SCANNER ============ -->
+<div id="scan" class="hidden">
+  <video id="scanVideo" playsinline muted autoplay></video>
+  <div id="scanFlash"></div>
+  <div class="tip">Fill the screen with the page, hold steady and tap the button. Keep going — tap Done when finished.</div>
+  <div class="sbar">
+    <img id="scanLast" alt="">
+    <button id="shutter" aria-label="Take photo"></button>
+    <div style="text-align:right"><div id="scanCount">0 pages</div><button class="btn" id="scanDone" style="margin-top:6px">Done</button></div>
+  </div>
+</div>
+
+<!-- ============ EDITOR ============ -->
+<section id="vEdit" class="hidden">
+  <header class="top">
+    <button class="iconbtn" data-back>←</button>
+    <h1>Check the text</h1>
+    <button class="btn" id="editSave">Save</button>
+  </header>
+  <main>
+    <label class="fld" for="editTitle">Book title</label>
+    <input type="text" id="editTitle">
+    <div class="hint">Fix any words the reader got wrong. Start a line with <b># Title</b> to split it into a new chapter there.</div>
+    <div id="chapList"></div>
+    <button class="btn alt wide" id="editAddChap" style="margin-top:12px">＋ Add a chapter</button>
+  </main>
+</section>
+
+<!-- ============ PLAYER ============ -->
+<section id="vPlayer" class="hidden">
+  <header class="top">
+    <button class="iconbtn" data-back>←</button>
+    <h1 id="pTitle">Book</h1>
+    <button class="iconbtn" id="pEdit" title="Edit text">✏️</button>
+  </header>
+  <main>
+    <div class="pHead">
+      <select id="pChap" aria-label="Chapter"></select>
+    </div>
+    <div id="pImgWrap" class="hidden"><img id="pImg" alt=""></div>
+    <div id="reader"></div>
+    <div class="row" style="justify-content:center;margin-top:18px">
+      <button class="btn alt" id="pNextCh">Next chapter →</button>
+    </div>
+  </main>
+  <div class="dock">
+    <div class="in" style="position:relative">
+      <div id="pBusy" class="hidden">Getting voice…</div>
+      <div class="main">
+        <button id="pPrev" title="Back a sentence">⏮</button>
+        <button id="pPlay" title="Play">▶</button>
+        <button id="pNext" title="Forward a sentence">⏭</button>
+      </div>
+      <div class="tools">
+        <select id="pVoice" aria-label="Voice"></select>
+        <button class="iconbtn" id="pSpeed">1×</button>
+        <button class="iconbtn" id="pSleep">🌙 Off</button>
+        <button class="iconbtn" id="pKids">🧒 Kids</button>
+        <button class="iconbtn" id="pDl">⬇️ MP3</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SETTINGS ============ -->
+<section id="vSettings" class="hidden">
+  <header class="top">
+    <button class="iconbtn" data-back>←</button>
+    <h1>Settings</h1>
+  </header>
+  <main>
+    <div class="sect card">
+      <h2>🔊 Free voice (this phone)</h2>
+      <p class="muted small">Uses your phone's built-in voices. Free and works offline.</p>
+      <select id="sDevVoice"></select>
+      <div class="row" style="margin-top:10px"><button class="btn alt" id="sDevTest">Test voice</button></div>
+    </div>
+
+    <div class="sect card">
+      <h2>🎙️ ElevenLabs voices</h2>
+      <p class="muted small">Studio-quality voices, including a clone of your own voice for bedtime stories. Needed for MP3 downloads. Get a key at <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener">elevenlabs.io → API keys</a> (allow Text to Speech, Voices and Models).</p>
+      <label class="fld" for="sElKey">API key</label>
+      <input type="password" id="sElKey" placeholder="sk_…" autocomplete="off">
+      <label class="fld" for="sElModel">Voice model</label>
+      <select id="sElModel">
+        <option value="eleven_multilingual_v2">Multilingual v2 — best quality</option>
+        <option value="eleven_flash_v2_5">Flash v2.5 — faster &amp; cheaper</option>
+      </select>
+      <div class="row" style="margin-top:10px"><button class="btn" id="sElSave">Save &amp; load my voices</button></div>
+      <div class="status" id="sElStatus"></div>
+    </div>
+
+    <div class="sect card">
+      <h2>🔎 Gemini page reader</h2>
+      <p class="muted small">Optional. Reads scanned pages far more accurately than the free reader, especially picture books and curved pages.</p>
+      <label class="fld" for="sGemKey">Gemini API key</label>
+      <input type="password" id="sGemKey" placeholder="AIza…" autocomplete="off">
+      <div class="small muted" id="sGemShared" style="margin-top:6px"></div>
+      <label class="fld" for="sGemModel">Model</label>
+      <input type="text" id="sGemModel">
+      <div class="row" style="margin-top:10px"><button class="btn" id="sGemSave">Save &amp; test</button></div>
+      <div class="status" id="sGemStatus"></div>
+    </div>
+
+    <div class="sect card">
+      <h2>🧒 Kids mode</h2>
+      <label class="fld" for="sKidSize">Text size</label>
+      <input type="range" id="sKidSize" min="22" max="48" step="2">
+      <p id="sKidSample" style="font-family:Lexend;background:#fffaf0;color:#1d1d1d;border-radius:12px;padding:12px 14px;margin:8px 0 0">The cat sat on the mat.</p>
+      <label class="fld" for="sKidRate">Kids reading speed</label>
+      <input type="range" id="sKidRate" min="0.5" max="1.1" step="0.05">
+      <div class="small muted" id="sKidRateLbl"></div>
+    </div>
+
+    <div class="sect card">
+      <h2>💾 Storage</h2>
+      <p class="muted small">ElevenLabs audio is saved after it's made, so replaying never costs twice.</p>
+      <div class="row wrap">
+        <button class="btn alt" id="sClearAudio">Clear saved audio</button>
+        <button class="btn alt" id="sSample">Add sample story</button>
+      </div>
+      <div class="status" id="sStoreStatus"></div>
+    </div>
+    <p class="small muted" style="text-align:center;margin-top:20px">Read To Me · v1.0 · books stay on this device</p>
+  </main>
+</section>
+
+<div id="overlay" class="hidden"><div class="box">
+  <h2 id="ovTitle">Working…</h2>
+  <div class="prog"><i id="ovBar"></i></div>
+  <div class="muted small" id="ovMsg"></div>
+  <div class="row" style="justify-content:flex-end;margin-top:14px"><button class="btn alt" id="ovCancel">Cancel</button></div>
+</div></div>
+<div id="toast"></div>
+
+<script>
+'use strict';
+/* =========================================================
+   Basics
+   ========================================================= */
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem('rtm_' + k); return v === null ? d : v; }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem('rtm_' + k, v); }catch(e){} }
+};
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+let toastT;
+function toast(msg, ms){
+  const t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), ms || 3200);
+}
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function hash(s){ let h = 5381; for(let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36) + s.length.toString(36); }
+const loaded = {};
+function loadScript(src){
+  if(!loaded[src]) loaded[src] = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = src; s.onload = res;
+    s.onerror = () => { delete loaded[src]; rej(new Error('Could not load a helper — check your internet connection.')); };
+    document.head.appendChild(s);
+  });
+  return loaded[src];
+}
+
+/* =========================================================
+   Storage (IndexedDB)
+   ========================================================= */
+let _db;
+function db(){
+  if(!_db) _db = new Promise((res, rej) => {
+    const r = indexedDB.open('read-to-me', 1);
+    r.onupgradeneeded = () => {
+      const d = r.result;
+      if(!d.objectStoreNames.contains('books')) d.createObjectStore('books', {keyPath:'id'});
+      if(!d.objectStoreNames.contains('audio')) d.createObjectStore('audio', {keyPath:'key'});
+    };
+    r.onsuccess = () => res(r.result);
+    r.onerror = () => rej(r.error);
+  });
+  return _db;
+}
+async function dbOp(name, mode, fn){
+  const d = await db();
+  return new Promise((res, rej) => {
+    const tx = d.transaction(name, mode); const req = fn(tx.objectStore(name));
+    tx.oncomplete = () => res(req ? req.result : undefined);
+    tx.onerror = () => rej(tx.error); tx.onabort = () => rej(tx.error || new Error('Storage full?'));
+  });
+}
+const dbGet = (s, k) => dbOp(s, 'readonly', st => st.get(k));
+const dbPut = (s, v) => dbOp(s, 'readwrite', st => st.put(v));
+const dbDel = (s, k) => dbOp(s, 'readwrite', st => st.delete(k));
+const dbAll = s => dbOp(s, 'readonly', st => st.getAll());
+const dbDelRange = (s, prefix) => dbOp(s, 'readwrite', st => st.delete(IDBKeyRange.bound(prefix, prefix + '￿')));
+const dbClear = s => dbOp(s, 'readwrite', st => st.clear());
+
+/* =========================================================
+   Views
+   ========================================================= */
+const views = ['vLibrary', 'vAdd', 'vEdit', 'vPlayer', 'vSettings'];
+let viewStack = ['vLibrary'];
+function show(v, replace){
+  if(replace) viewStack[viewStack.length - 1] = v;
+  else if(viewStack[viewStack.length - 1] !== v){ viewStack.push(v); try{ history.pushState({v}, ''); }catch(e){} }
+  views.forEach(x => $(x).classList.toggle('hidden', x !== v));
+  window.scrollTo(0, 0);
+  if(v === 'vLibrary') renderLibrary();
+  if(v === 'vSettings') loadSettings();
+}
+function back(){
+  const cur = viewStack.pop();
+  if(cur === 'vPlayer') pausePlay();
+  show(viewStack[viewStack.length - 1] || 'vLibrary', true);
+}
+document.querySelectorAll('[data-back]').forEach(b => b.onclick = () => { if(viewStack.length > 1) history.back(); else back(); });
+window.addEventListener('popstate', () => {
+  if(!$('scan').classList.contains('hidden')){ closeScanner(true); return; }
+  if(!$('overlay').classList.contains('hidden')) return;
+  if(viewStack.length > 1) back();
+});
+
+/* =========================================================
+   Text tools
+   ========================================================= */
+function cleanText(t){
+  t = String(t || '').replace(/\r\n?/g, '\n').replace(/­/g, '').replace(/[\t  ]+/g, ' ');
+  t = t.replace(/([A-Za-z])-\n\s*([a-z])/g, '$1$2');               // words split over lines
+  const lines = t.split('\n').map(l => l.trim()).filter(l => !/^(\d{1,4}|page \d{1,4})$/i.test(l)); // drop page numbers
+  const paras = []; let cur = [];
+  const flush = () => { if(cur.length){ paras.push(cur.join(' ')); cur = []; } };
+  for(const l of lines){
+    if(!l){ flush(); continue; }
+    if(/^#\s+/.test(l)){ flush(); paras.push(l); continue; }
+    cur.push(l);
+  }
+  flush();
+  return paras.join('\n\n');
+}
+function isHeading(p){ return /^#\s+\S/.test(p) || (p.length < 60 && /^(chapter|part)\s+([0-9]+|[ivxlc]+|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty)\b/i.test(p)); }
+function splitChapters(text, firstTitle){
+  const chs = []; let cur = {title: firstTitle || 'Chapter 1', paras: []};
+  for(const raw of String(text || '').split(/\n{2,}/)){
+    const p = raw.trim(); if(!p) continue;
+    if(isHeading(p)){
+      if(cur.paras.length || chs.length || cur.title !== (firstTitle || 'Chapter 1')) { if(cur.paras.length) chs.push(cur); }
+      cur = {title: p.replace(/^#\s+/, ''), paras: []}; continue;
+    }
+    cur.paras.push(p);
+  }
+  if(cur.paras.length || !chs.length) chs.push(cur);
+  return chs.map(c => ({title: c.title, text: c.paras.join('\n\n')}));
+}
+const ABBR = /^(mr|mrs|ms|dr|st|vs|etc|e\.g|i\.e|no|fig|prof|sr|jr|mt|approx|p|pp)\.$/i;
+function analyse(text){
+  const words = [], sents = [], paras = [];
+  const pr = /[^\n](?:[^\n]|\n(?!\n))*/g; let m;
+  while((m = pr.exec(text))){
+    const p0 = m.index, pt = m[0], w0 = words.length; let sw = words.length;
+    const push = () => { if(words.length > sw){ const si = sents.length; for(let i = sw; i < words.length; i++) words[i].si = si; sents.push({w0: sw, w1: words.length - 1, s: words[sw].s, e: words[words.length - 1].e}); sw = words.length; } };
+    const wr = /\S+/g; let w;
+    while((w = wr.exec(pt))){
+      words.push({s: p0 + w.index, e: p0 + w.index + w[0].length, t: w[0], si: 0});
+      const n = words.length - sw, clean = w[0].replace(/["'“”‘’()\[\]]/g, '');
+      const end = /[.!?…]["'”’)\]]*$/.test(w[0]) && !ABBR.test(clean);
+      if(end || n >= 45 || (n >= 25 && /[,;:]$/.test(w[0]))) push();
+    }
+    push();
+    if(words.length > w0) paras.push({w0, w1: words.length - 1});
+  }
+  return {words, sents, paras};
+}
+function wordAtOffset(an, off){
+  const w = an.words; let lo = 0, hi = w.length - 1, ans = 0;
+  while(lo <= hi){ const mid = (lo + hi) >> 1; if(w[mid].s <= off){ ans = mid; lo = mid + 1; } else hi = mid - 1; }
+  return ans;
+}
+
+/* =========================================================
+   Images
+   ========================================================= */
+function fileToImage(file){
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file); const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); res(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(new Error('Could not open that picture')); };
+    img.src = url;
+  });
+}
+function shrink(src, max, q){
+  const w = src.naturalWidth || src.videoWidth || src.width, h = src.naturalHeight || src.videoHeight || src.height;
+  const k = Math.min(1, max / Math.max(w, h)); const c = document.createElement('canvas');
+  c.width = Math.round(w * k); c.height = Math.round(h * k);
+  c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+  return c.toDataURL('image/jpeg', q || 0.85);
+}
+function dataUrlToImage(u){ return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = u; }); }
+
+/* =========================================================
+   Page reading (OCR)
+   ========================================================= */
+function geminiKey(){ return store.get('gemKey', '') || (()=>{ try{ return localStorage.getItem('ss_key') || ''; }catch(e){ return ''; } })(); }
+function gemModel(){ return store.get('gemModel', 'gemini-3.8-flash') || 'gemini-3.8-flash'; }
+const OCR_PROMPT = `This is a photo of a page (or a two-page spread) from a book. Write out the text printed on it exactly as written, in reading order (left page first, then right page).
+Rules:
+- Join the lines of each paragraph together; put one blank line between paragraphs.
+- Leave out page numbers, running headers and footers, and words that are only part of a picture.
+- If a line is a chapter title, put it on its own line starting with "# ".
+- If there is no text, reply with nothing at all.
+- Output only the book's text — no comments, no quotation marks around it.`;
+async function ocrGeminiOne(dataUrl){
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(gemModel())}:generateContent`, {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'x-goog-api-key': geminiKey()},
+    body: JSON.stringify({contents: [{role: 'user', parts: [{text: OCR_PROMPT}, {inline_data: {mime_type: 'image/jpeg', data: dataUrl.split(',')[1]}}]}], generationConfig: {temperature: 0}})
+  });
+  let d = {}; try{ d = await res.json(); }catch(e){}
+  if(!res.ok){
+    const m = (d.error && d.error.message) || ('Gemini error ' + res.status);
+    if(res.status === 404) throw new Error(m + ' — the model name may have changed (Settings → Gemini).');
+    throw new Error(m);
+  }
+  const c = (d.candidates || [])[0];
+  return ((c && c.content && c.content.parts) || []).map(p => p.text || '').join('').trim();
+}
+let tessWorker = null;
+async function ocrFreeOne(dataUrl, onProg){
+  await loadScript('https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js');
+  if(!tessWorker){
+    ocrFreeOne.cb = null;
+    tessWorker = await Tesseract.createWorker('eng', 1, {logger: m => { if(m.status === 'recognizing text' && ocrFreeOne.cb) ocrFreeOne.cb(m.progress); }});
+  }
+  ocrFreeOne.cb = onProg;
+  const {data} = await tessWorker.recognize(dataUrl);
+  return data.text || '';
+}
+async function readImages(images, engine){
+  const out = new Array(images.length).fill('');
+  let done = 0, failedOver = false;
+  const upd = (extra) => setOverlay(null, (done + (extra || 0)) / images.length, `Page ${Math.min(done + 1, images.length)} of ${images.length}`);
+  if(engine === 'gemini'){
+    let next = 0;
+    const worker = async () => {
+      while(next < images.length && !ovCancelled && !failedOver){
+        const i = next++;
+        try{ out[i] = await ocrGeminiOne(images[i]); }
+        catch(e){ if(!failedOver){ failedOver = true; toast('Gemini: ' + e.message + ' — switching to the free reader.', 6000); } next = i; return; }
+        done++; upd();
+      }
+    };
+    await Promise.all([worker(), worker(), worker()]);
+    if(!failedOver) return out;
+    done = out.filter(Boolean).length;
+  }
+  for(let i = 0; i < images.length && !ovCancelled; i++){
+    if(out[i]) continue;
+    out[i] = await ocrFreeOne(images[i], p => upd(p));
+    done++; upd();
+  }
+  return out;
+}
+
+/* =========================================================
+   Ebook / PDF / text import
+   ========================================================= */
+async function parseEpub(file){
+  await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+  const zip = await JSZip.loadAsync(file);
+  const enc = zip.file('META-INF/encryption.xml');
+  if(enc){ const x = await enc.async('string'); if(/EncryptedData/.test(x) && !/fonts?\//i.test(x.replace(/<CipherReference[^>]*URI="[^"]*\.(otf|ttf|woff2?)"/gi, ''))) throw new Error('This ebook is copy-protected (DRM), so it can\'t be opened here. For books like this, use your reading app\'s read-aloud — or scan the paper copy.'); }
+  const xml = s => new DOMParser().parseFromString(s, 'application/xml');
+  const container = xml(await zip.file('META-INF/container.xml').async('string'));
+  const opfPath = container.querySelector('rootfile').getAttribute('full-path');
+  const base = opfPath.includes('/') ? opfPath.slice(0, opfPath.lastIndexOf('/') + 1) : '';
+  const opf = xml(await zip.file(opfPath).async('string'));
+  const title = (opf.getElementsByTagNameNS('*', 'title')[0] || {}).textContent || file.name.replace(/\.epub$/i, '');
+  const items = {}; [...opf.getElementsByTagNameNS('*', 'item')].forEach(it => items[it.getAttribute('id')] = it);
+  const resolve = href => { const parts = (base + decodeURIComponent(href)).split('/'); const out = []; parts.forEach(p => { if(p === '..') out.pop(); else if(p !== '.') out.push(p); }); return out.join('/'); };
+  // cover
+  let cover = null;
+  try{
+    let ci = [...Object.values(items)].find(i => /cover-image/.test(i.getAttribute('properties') || ''));
+    if(!ci){ const meta = [...opf.getElementsByTagNameNS('*', 'meta')].find(m => m.getAttribute('name') === 'cover'); if(meta) ci = items[meta.getAttribute('content')]; }
+    if(ci){ const f = zip.file(resolve(ci.getAttribute('href'))); if(f){ const b = await f.async('blob'); cover = shrink(await fileToImage(b), 500, 0.75); } }
+  }catch(e){}
+  const chapters = [];
+  for(const ref of opf.getElementsByTagNameNS('*', 'itemref')){
+    const it = items[ref.getAttribute('idref')]; if(!it) continue;
+    const f = zip.file(resolve(it.getAttribute('href'))); if(!f) continue;
+    const src = await f.async('string');
+    let doc = new DOMParser().parseFromString(src, 'application/xhtml+xml');
+    if(doc.querySelector('parsererror')) doc = new DOMParser().parseFromString(src, 'text/html');
+    const body = doc.body || doc.getElementsByTagName('body')[0]; if(!body) continue;
+    body.querySelectorAll('script,style,sup.noteref,a.noteref').forEach(n => n.remove());
+    const h = body.querySelector('h1,h2,h3');
+    body.querySelectorAll('br').forEach(n => n.replaceWith(doc.createTextNode('\n')));
+    body.querySelectorAll('p,h1,h2,h3,h4,h5,h6,li,blockquote,div,section,tr,figcaption').forEach(n => n.appendChild(doc.createTextNode('\n\n')));
+    const text = cleanText(body.textContent);
+    if(text.replace(/\s/g, '').length < 40) continue;
+    let ctitle = h ? h.textContent.replace(/\s+/g, ' ').trim() : '';
+    let ctext = text;
+    if(ctitle && ctext.startsWith(ctitle)) ctext = ctext.slice(ctitle.length).trim();
+    chapters.push({title: (ctitle || 'Section ' + (chapters.length + 1)).slice(0, 80), text: ctext});
+  }
+  if(!chapters.length) throw new Error('No readable text found in that ebook.');
+  return {title: title.trim(), chapters, cover};
+}
+async function parsePdf(file){
+  await loadScript('https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+  const pdf = await pdfjsLib.getDocument({data: await file.arrayBuffer()}).promise;
+  const pages = [];
+  for(let i = 1; i <= pdf.numPages && !ovCancelled; i++){
+    setOverlay(null, i / pdf.numPages * 0.5, `Reading page ${i} of ${pdf.numPages}`);
+    const page = await pdf.getPage(i); const tc = await page.getTextContent();
+    let s = '', lastY = null;
+    for(const it of tc.items){
+      const y = it.transform ? Math.round(it.transform[5]) : null;
+      if(lastY !== null && y !== null && Math.abs(y - lastY) > 14) s += '\n\n'; else if(lastY !== null && y !== lastY) s += '\n';
+      s += it.str; if(it.hasEOL) s += '\n'; lastY = y;
+    }
+    pages.push(s);
+  }
+  let cover = null;
+  try{ const p1 = await pdf.getPage(1); const vp = p1.getViewport({scale: 0.6}); const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; await p1.render({canvasContext: c.getContext('2d'), viewport: vp}).promise; cover = c.toDataURL('image/jpeg', 0.7); }catch(e){}
+  const total = pages.join('').replace(/\s/g, '').length;
+  if(total < pdf.numPages * 30){
+    // A scanned PDF (pictures of pages) — render each page and read it
+    const imgs = [];
+    for(let i = 1; i <= pdf.numPages && !ovCancelled; i++){
+      setOverlay('Scanned PDF — reading the pictures', i / pdf.numPages * 0.3, `Preparing page ${i} of ${pdf.numPages}`);
+      const p = await pdf.getPage(i); const vp = p.getViewport({scale: 2}); const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height;
+      await p.render({canvasContext: c.getContext('2d'), viewport: vp}).promise; imgs.push(shrink(c, 1800, 0.85));
+    }
+    return {scanned: imgs, cover, title: file.name.replace(/\.pdf$/i, '')};
+  }
+  // Clean each page separately (so page-break hyphens/headers are handled), then join
+  const text = pages.map(cleanText).join('\n\n');
+  let chapters = splitChapters(text, 'Start');
+  if(chapters.length === 1 && pages.length > 12){
+    chapters = []; for(let i = 0; i < pages.length; i += 10){ chapters.push({title: `Pages ${i + 1}–${Math.min(i + 10, pages.length)}`, text: pages.slice(i, i + 10).map(cleanText).join('\n\n')}); }
+  }
+  return {title: file.name.replace(/\.pdf$/i, ''), chapters: chapters.filter(c => c.text.trim()), cover};
+}
+
+/* =========================================================
+   Overlay (progress)
+   ========================================================= */
+let ovCancelled = false;
+function openOverlay(title, msg){ ovCancelled = false; $('ovTitle').textContent = title; $('ovMsg').textContent = msg || ''; $('ovBar').style.width = '0'; $('overlay').classList.remove('hidden'); }
+function setOverlay(title, frac, msg){ if(title) $('ovTitle').textContent = title; if(frac != null) $('ovBar').style.width = Math.round(Math.min(1, frac) * 100) + '%'; if(msg != null) $('ovMsg').textContent = msg; }
+function closeOverlay(){ $('overlay').classList.add('hidden'); }
+$('ovCancel').onclick = () => { ovCancelled = true; closeOverlay(); toast('Cancelled'); };
+
+/* =========================================================
+   Library
+   ========================================================= */
+const COLOURS = [['#3b5bdb','#7048e8'],['#e8590c','#f59f00'],['#2b8a3e','#20c997'],['#c2255c','#f06595'],['#1971c2','#22b8cf'],['#5f3dc4','#be4bdb']];
+async function renderLibrary(){
+  const books = (await dbAll('books')).sort((a, b) => (b.last || b.created) - (a.last || a.created));
+  $('libEmpty').classList.toggle('hidden', books.length > 0);
+  const lib = $('lib'); lib.innerHTML = '';
+  if(!books.length) return;
+  const add = document.createElement('button'); add.className = 'addtile'; add.innerHTML = '<b>＋</b>Add a book'; add.onclick = startAdd; lib.appendChild(add);
+  books.forEach((b, idx) => {
+    const el = document.createElement('div'); el.className = 'book';
+    const n = b.chapters.length, ch = b.pos ? b.pos.ch : 0, pct = b.finished ? 100 : Math.round((ch / Math.max(1, n)) * 100);
+    const col = COLOURS[(b.title.length + idx) % COLOURS.length];
+    const cover = b.cover ? `<div class="cov" style="background-image:url('${b.cover}')"></div>` : `<div class="cov gen" style="background:linear-gradient(135deg,${col[0]},${col[1]})">${esc(b.title)}</div>`;
+    el.innerHTML = `${cover}<div class="bar"><i style="width:${pct}%"></i></div><div class="meta"><b>${esc(b.title)}</b><span>${b.kind === 'picture' ? '🧸 ' : ''}${b.finished ? 'Finished ✓' : (b.pos ? (b.kind === 'picture' ? 'Page ' : 'Ch ') + (ch + 1) + ' of ' + n : n + (b.kind === 'picture' ? ' pages' : ' chapters'))}</span></div><button class="more" aria-label="Options">⋯</button>`;
+    el.onclick = e => { if(e.target.closest('.more')) return; openPlayer(b.id); };
+    el.querySelector('.more').onclick = e => { e.stopPropagation(); bookMenu(b, e.clientX, e.clientY); };
+    lib.appendChild(el);
+  });
+}
+function closeMenus(){ document.querySelectorAll('.menu').forEach(m => m.remove()); }
+document.addEventListener('click', e => { if(!e.target.closest('.menu') && !e.target.closest('.more')) closeMenus(); });
+function bookMenu(b, x, y){
+  closeMenus();
+  const m = document.createElement('div'); m.className = 'menu';
+  m.innerHTML = '<button data-a="play">▶ Open</button><button data-a="edit">✏️ Edit text</button><button data-a="restart">↺ Start again</button><button data-a="del" style="color:var(--red)">🗑 Delete</button>';
+  document.body.appendChild(m);
+  m.style.left = Math.min(x, innerWidth - 190) + 'px'; m.style.top = Math.min(y, innerHeight - 200) + 'px';
+  m.onclick = async e => {
+    const a = e.target.dataset.a; closeMenus(); if(!a) return;
+    if(a === 'play') openPlayer(b.id);
+    if(a === 'edit') openEditor(b, false);
+    if(a === 'restart'){ b.pos = {ch: 0, si: 0}; b.finished = false; await dbPut('books', b); renderLibrary(); }
+    if(a === 'del' && confirm(`Delete "${b.title}"?`)){ await dbDel('books', b.id); await dbDelRange('audio', b.id + '|').catch(()=>{}); renderLibrary(); toast('Deleted'); }
+  };
+}
+$('emptyAdd').onclick = () => startAdd();
+$('emptySample').onclick = addSample;
+$('goSettings').onclick = () => show('vSettings');
+
+/* =========================================================
+   Add a book
+   ========================================================= */
+let addKind = 'text', ocrEngine = 'free', pending = [];
+function startAdd(){
+  pending = []; $('addTitle').value = ''; $('pasteText').value = '';
+  $('pasteBox').classList.add('hidden'); renderPending(); setKind('text');
+  ocrEngine = geminiKey() ? 'gemini' : 'free'; setOcr(ocrEngine);
+  show('vAdd');
+}
+function setKind(k){
+  addKind = k;
+  $('kindSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.k === k));
+  $('kindHint').textContent = k === 'picture' ? 'Each photo becomes a page with its picture — great for reading along with the kids.' : 'Text is joined up and split into chapters — best for novels, guides and manuals.';
+}
+$('kindSeg').onclick = e => { const b = e.target.closest('button'); if(b) setKind(b.dataset.k); };
+function setOcr(o){
+  ocrEngine = o;
+  $('ocrSeg').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.o === o));
+  $('ocrHint').innerHTML = o === 'gemini'
+    ? (geminiKey() ? 'Most accurate. Pages are sent to Google Gemini using your key.' : '⚠️ Add your Gemini key in Settings first — or use the free reader.')
+    : 'Works on your phone, no key needed. Best with flat, well-lit pages.';
+}
+$('ocrSeg').onclick = e => { const b = e.target.closest('button'); if(b) setOcr(b.dataset.o); };
+function renderPending(){
+  $('pagesBox').classList.toggle('hidden', !pending.length);
+  $('pageCount').textContent = pending.length;
+  $('pageThumbs').innerHTML = pending.map((p, i) => `<div class="t"><img src="${p}"><i>${i + 1}</i><button data-i="${i}">✕</button></div>`).join('');
+}
+$('pageThumbs').onclick = e => { const b = e.target.closest('button'); if(b){ pending.splice(+b.dataset.i, 1); renderPending(); } };
+$('cPhotos').onclick = () => $('fPhotos').click();
+$('fPhotos').onchange = async e => {
+  const files = [...e.target.files].sort((a, b) => a.lastModified - b.lastModified || a.name.localeCompare(b.name)); e.target.value = '';
+  if(!files.length) return;
+  openOverlay('Adding photos');
+  for(let i = 0; i < files.length; i++){ setOverlay(null, (i + 1) / files.length, `${i + 1} of ${files.length}`); try{ pending.push(shrink(await fileToImage(files[i]), 1800, 0.85)); }catch(err){ toast(err.message); } }
+  closeOverlay(); renderPending();
+};
+$('fCamera').onchange = async e => { const f = e.target.files[0]; e.target.value = ''; if(f){ pending.push(shrink(await fileToImage(f), 1800, 0.85)); renderPending(); } };
+$('cPaste').onclick = () => { $('pasteBox').classList.remove('hidden'); $('pasteText').focus(); };
+$('pasteGo').onclick = () => {
+  const t = $('pasteText').value.trim(); if(!t) return toast('Paste some text first');
+  const title = $('addTitle').value.trim() || 'My text';
+  const chapters = addKind === 'picture'
+    ? t.split(/\n{2,}/).map((p, i) => ({title: 'Page ' + (i + 1), text: cleanText(p)}))
+    : splitChapters(cleanText(t), 'Chapter 1');
+  openEditor({id: uid(), title, kind: addKind, chapters, created: Date.now()}, true);
+};
+$('cFile').onclick = () => $('fBook').click();
+$('fBook').onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ''; if(!f) return;
+  const name = f.name.toLowerCase();
+  openOverlay('Opening ' + f.name);
+  try{
+    let res;
+    if(name.endsWith('.epub')) res = await parseEpub(f);
+    else if(name.endsWith('.pdf')) res = await parsePdf(f);
+    else res = {title: f.name.replace(/\.(txt|md)$/i, ''), chapters: splitChapters(cleanText(await f.text()), 'Chapter 1')};
+    if(ovCancelled) return;
+    const title = $('addTitle').value.trim() || res.title;
+    if(res.scanned){
+      setOverlay('Reading the pages', 0, '');
+      const texts = await readImages(res.scanned, geminiKey() ? 'gemini' : 'free');
+      if(ovCancelled) return;
+      res.chapters = splitChapters(cleanText(texts.join('\n\n')), 'Start');
+    }
+    closeOverlay();
+    openEditor({id: uid(), title, kind: 'text', chapters: res.chapters, cover: res.cover || null, created: Date.now()}, true);
+  }catch(err){ closeOverlay(); toast(err.message, 7000); console.error(err); }
+};
+$('readPages').onclick = async () => {
+  if(!pending.length) return;
+  if(ocrEngine === 'gemini' && !geminiKey()) return toast('Add a Gemini key in Settings, or pick the free reader');
+  openOverlay('Reading the pages', 'Getting the reader ready…');
+  try{
+    const texts = await readImages(pending, ocrEngine);
+    if(ovCancelled) return;
+    setOverlay('Tidying up', 1, '');
+    const title = $('addTitle').value.trim() || (addKind === 'picture' ? 'My picture book' : 'My book');
+    let chapters, cover = shrink(await dataUrlToImage(pending[0]), 500, 0.75);
+    if(addKind === 'picture'){
+      chapters = [];
+      for(let i = 0; i < pending.length; i++) chapters.push({title: 'Page ' + (i + 1), text: cleanText(texts[i]).replace(/^#\s+/gm, ''), img: shrink(await dataUrlToImage(pending[i]), 1100, 0.78)});
+    } else chapters = splitChapters(cleanText(texts.join('\n\n')), 'Chapter 1');
+    closeOverlay();
+    openEditor({id: uid(), title, kind: addKind, chapters, cover, created: Date.now()}, true);
+  }catch(err){ closeOverlay(); toast(err.message, 7000); console.error(err); }
+};
+
+/* ---------- Live scanner ---------- */
+let scanStream = null;
+$('cScan').onclick = openScanner;
+$('addMoreScan').onclick = openScanner;
+async function openScanner(){
+  try{
+    scanStream = await navigator.mediaDevices.getUserMedia({video: {facingMode: {ideal: 'environment'}, width: {ideal: 2560}, height: {ideal: 1440}}, audio: false});
+  }catch(e){ $('fCamera').click(); return; }
+  const v = $('scanVideo'); v.srcObject = scanStream; await v.play().catch(()=>{});
+  $('scan').classList.remove('hidden'); updScanCount(); try{ history.pushState({scan: 1}, ''); }catch(e){}
+}
+function updScanCount(){ $('scanCount').textContent = pending.length + (pending.length === 1 ? ' page' : ' pages'); if(pending.length) $('scanLast').src = pending[pending.length - 1]; }
+$('shutter').onclick = () => {
+  const v = $('scanVideo'); if(!v.videoWidth) return;
+  pending.push(shrink(v, 1800, 0.85));
+  const f = $('scanFlash'); f.style.opacity = .7; setTimeout(() => f.style.opacity = 0, 120);
+  if(navigator.vibrate) navigator.vibrate(30);
+  updScanCount();
+};
+$('scanDone').onclick = () => history.back();
+function closeScanner(){
+  if(scanStream) scanStream.getTracks().forEach(t => t.stop()); scanStream = null;
+  $('scan').classList.add('hidden'); renderPending();
+}
+
+/* =========================================================
+   Editor
+   ========================================================= */
+let editing = null, editingNew = false;
+function openEditor(book, isNew){
+  editing = JSON.parse(JSON.stringify(book)); editingNew = isNew;
+  $('editTitle').value = editing.title;
+  renderChapEditor();
+  show('vEdit', viewStack[viewStack.length - 1] === 'vAdd');
+}
+function renderChapEditor(){
+  const list = $('chapList'); list.innerHTML = '';
+  editing.chapters.forEach((c, i) => {
+    const d = document.createElement('div'); d.className = 'chap';
+    d.innerHTML = `<div class="row"><input type="text" value="${esc(c.title)}" data-f="title"><button class="iconbtn" data-a="del" title="Remove">🗑</button></div>${c.img ? `<img src="${c.img}" alt="">` : ''}<textarea data-f="text" placeholder="${c.img ? 'No words on this page (it will just show the picture)' : 'Text…'}">${esc(c.text)}</textarea>`;
+    d.querySelector('[data-f=title]').oninput = e => c.title = e.target.value;
+    d.querySelector('[data-f=text]').oninput = e => c.text = e.target.value;
+    d.querySelector('[data-a=del]').onclick = () => { if(confirm('Remove "' + c.title + '"?')){ editing.chapters.splice(i, 1); renderChapEditor(); } };
+    list.appendChild(d);
+  });
+  list.querySelectorAll('textarea').forEach(t => { t.style.height = Math.min(520, Math.max(140, t.scrollHeight + 4)) + 'px'; });
+}
+$('editAddChap').onclick = () => { editing.chapters.push({title: (editing.kind === 'picture' ? 'Page ' : 'Chapter ') + (editing.chapters.length + 1), text: ''}); renderChapEditor(); };
+$('editSave').onclick = async () => {
+  const b = editing; b.title = $('editTitle').value.trim() || b.title || 'Untitled';
+  const out = [];
+  for(const c of b.chapters){
+    const text = String(c.text || '').replace(/\r/g, '');
+    const pieces = /^#\s+/m.test(text) ? splitChapters(text.split('\n').map(l => l.trim()).join('\n').replace(/\n(?=#\s)/g, '\n\n').replace(/(^#\s.*)\n(?!\n)/gm, '$1\n\n'), c.title) : [{title: c.title, text: text.trim()}];
+    pieces.forEach((p, i) => { const ch = {title: (p.title || c.title || '').trim() || 'Untitled', text: p.text.replace(/[ \t]+\n/g, '\n').trim()}; if(i === 0 && c.img) ch.img = c.img; if(ch.text || ch.img) out.push(ch); });
+  }
+  if(!out.length) return toast('There\'s no text to save yet');
+  b.chapters = out;
+  if(b.pos && b.pos.ch >= out.length) b.pos = {ch: 0, si: 0};
+  try{ await dbPut('books', b); }catch(e){ return toast('Could not save — your phone may be low on storage.'); }
+  if(!editingNew) await dbDelRange('audio', b.id + '|').catch(()=>{});
+  viewStack = ['vLibrary'];
+  openPlayer(b.id);
+};
+
+/* =========================================================
+   Voices
+   ========================================================= */
+let devVoices = [];
+function loadDevVoices(){
+  devVoices = (window.speechSynthesis ? speechSynthesis.getVoices() : []).slice().sort((a, b) => {
+    const s = v => (v.lang.startsWith('en-GB') ? 0 : v.lang.startsWith('en') ? 1 : 2);
+    return s(a) - s(b) || a.name.localeCompare(b.name);
+  });
+  fillVoiceSelects();
+}
+if(window.speechSynthesis){ loadDevVoices(); speechSynthesis.onvoiceschanged = loadDevVoices; }
+function elVoices(){ try{ return JSON.parse(store.get('elVoices', '[]')); }catch(e){ return []; } }
+function currentVoice(){
+  const v = store.get('voice', '');
+  if(v.startsWith('el:') && store.get('elKey', '') && elVoices().some(x => 'el:' + x.id === v)) return v;
+  if(v.startsWith('dev:')) return v;
+  return 'dev:' + (store.get('devVoice', '') || '');
+}
+function engine(){ return currentVoice().startsWith('el:') ? 'el' : 'dev'; }
+function findDevVoice(){
+  const want = currentVoice().startsWith('dev:') ? currentVoice().slice(4) : store.get('devVoice', '');
+  return devVoices.find(v => v.voiceURI === want) || devVoices.find(v => v.lang === 'en-GB') || devVoices.find(v => /^en/.test(v.lang)) || devVoices[0] || null;
+}
+function fillVoiceSelects(){
+  const enV = devVoices.filter(v => /^en/i.test(v.lang)); const list = enV.length ? enV : devVoices;
+  const devOpts = list.map(v => `<option value="dev:${esc(v.voiceURI)}">${esc(v.name.replace(/^(Google|Microsoft)\s+/, ''))} (${esc(v.lang)})</option>`).join('') || '<option value="dev:">Phone voice</option>';
+  const els = elVoices();
+  const mine = els.filter(v => v.cat === 'cloned' || v.cat === 'generated' || v.cat === 'professional');
+  const rest = els.filter(v => !mine.includes(v));
+  const elOpts = (mine.length ? `<optgroup label="⭐ Your ElevenLabs voices">${mine.map(v => `<option value="el:${esc(v.id)}">⭐ ${esc(v.name)}</option>`).join('')}</optgroup>` : '') +
+                 (rest.length ? `<optgroup label="ElevenLabs voices">${rest.map(v => `<option value="el:${esc(v.id)}">✨ ${esc(v.name)}</option>`).join('')}</optgroup>` : '');
+  const pv = $('pVoice');
+  pv.innerHTML = `<optgroup label="Free — this phone">${devOpts}</optgroup>` + (store.get('elKey', '') ? elOpts : '');
+  const cur = currentVoice(); if([...pv.options].some(o => o.value === cur)) pv.value = cur; else if(pv.options.length) pv.selectedIndex = 0;
+  const sd = $('sDevVoice'); sd.innerHTML = devOpts; const dv = findDevVoice(); if(dv) sd.value = 'dev:' + dv.voiceURI;
+}
+$('pVoice').onchange = () => {
+  store.set('voice', $('pVoice').value);
+  if($('pVoice').value.startsWith('dev:')) store.set('devVoice', $('pVoice').value.slice(4));
+  if(P.playing) speakFrom(P.si);
+};
+
+/* =========================================================
+   Player
+   ========================================================= */
+const P = {book: null, ch: 0, text: '', an: null, chunks: [], si: 0, playing: false, token: 0, wordEls: [], curWord: -1, curSent: -1,
+           audio: new Audio(), audioUrl: null, rec: null, ci: -1, raf: 0, sleepT: null, sleepMode: 0, lastUserScroll: 0, saveT: null};
+P.audio.preload = 'auto';
+const SPEEDS = [0.6, 0.75, 0.85, 1, 1.15, 1.3, 1.5, 1.75, 2];
+const SLEEPS = [0, 10, 20, 30, 60, -1];
+function kids(){ return document.body.classList.contains('kids'); }
+function rate(){ return kids() ? parseFloat(store.get('kidRate', '0.8')) : parseFloat(store.get('rate', '1')); }
+
+async function openPlayer(id){
+  const b = await dbGet('books', id); if(!b) return toast('Book not found');
+  P.book = b; b.last = Date.now(); dbPut('books', b).catch(()=>{});
+  $('pTitle').textContent = b.title;
+  document.body.classList.toggle('kids', b.kids === undefined ? b.kind === 'picture' : !!b.kids);
+  updKidsBtn(); updSpeedBtn();
+  $('pChap').innerHTML = b.chapters.map((c, i) => `<option value="${i}">${b.kind === 'picture' ? '' : (i + 1) + '. '}${esc(c.title)}</option>`).join('');
+  fillVoiceSelects();
+  show('vPlayer');
+  openChapter(b.pos ? Math.min(b.pos.ch, b.chapters.length - 1) : 0, b.pos ? b.pos.si : 0);
+}
+function openChapter(n, si){
+  const c = P.book.chapters[n]; P.ch = n; P.text = c.text || ''; P.an = analyse(P.text); P.chunks = buildChunks(P.an, P.text);
+  P.curWord = -1; P.curSent = -1; P.rec = null; P.ci = -1;
+  $('pChap').value = n;
+  $('pImgWrap').classList.toggle('hidden', !c.img); if(c.img) $('pImg').src = c.img;
+  $('pNextCh').classList.toggle('hidden', n >= P.book.chapters.length - 1);
+  $('pNextCh').textContent = P.book.kind === 'picture' ? 'Next page →' : 'Next chapter →';
+  renderReader();
+  P.si = Math.max(0, Math.min(si || 0, P.an.sents.length - 1));
+  if(P.an.sents.length){ hlSent(P.si); hlWord(P.an.sents[P.si].w0, true); }
+  if(!si) window.scrollTo(0, 0);
+  setMedia();
+}
+function renderReader(){
+  const an = P.an;
+  if(!an.words.length){ $('reader').innerHTML = '<p class="noText">' + (P.book.chapters[P.ch].img ? 'No words on this page — enjoy the picture!' : 'No text in this chapter.') + '</p>'; P.wordEls = []; return; }
+  let h = '';
+  for(const p of an.paras){ h += '<p>'; for(let i = p.w0; i <= p.w1; i++) h += `<span class="w" data-i="${i}">${esc(an.words[i].t)}</span> `; h += '</p>'; }
+  $('reader').innerHTML = h;
+  P.wordEls = [...$('reader').querySelectorAll('.w')];
+}
+function hlSent(si){
+  if(si === P.curSent) return;
+  if(P.curSent >= 0 && P.an.sents[P.curSent]){ const s = P.an.sents[P.curSent]; for(let i = s.w0; i <= s.w1; i++) P.wordEls[i] && P.wordEls[i].classList.remove('s-on'); }
+  P.curSent = si;
+  if(si >= 0 && P.an.sents[si]){ const s = P.an.sents[si]; for(let i = s.w0; i <= s.w1; i++) P.wordEls[i] && P.wordEls[i].classList.add('s-on'); }
+}
+function hlWord(wi, force){
+  if(wi === P.curWord && !force) return;
+  if(P.wordEls[P.curWord]) P.wordEls[P.curWord].classList.remove('w-on');
+  P.curWord = wi; const el = P.wordEls[wi]; if(!el) return;
+  el.classList.add('w-on');
+  if(Date.now() - P.lastUserScroll < 4000) return;
+  const r = el.getBoundingClientRect(), bottom = innerHeight - 170;
+  if(r.top < 80 || r.bottom > bottom) window.scrollTo({top: window.scrollY + r.top - (bottom - 80) * 0.4, behavior: 'smooth'});
+}
+['touchmove', 'wheel'].forEach(ev => window.addEventListener(ev, () => { P.lastUserScroll = Date.now(); }, {passive: true}));
+function savePos(){
+  if(!P.book) return;
+  P.book.pos = {ch: P.ch, si: P.si}; P.book.last = Date.now();
+  clearTimeout(P.saveT); P.saveT = setTimeout(() => dbPut('books', P.book).catch(()=>{}), 600);
+}
+function setBusy(on, msg){ $('pBusy').classList.toggle('hidden', !on); if(msg) $('pBusy').textContent = msg; }
+function updPlayBtn(){ $('pPlay').textContent = P.playing ? '⏸' : '▶'; if('mediaSession' in navigator) navigator.mediaSession.playbackState = P.playing ? 'playing' : 'paused'; }
+function updSpeedBtn(){ $('pSpeed').textContent = (Math.round(rate() * 100) / 100) + '×'; }
+function updKidsBtn(){ $('pKids').classList.toggle('on', kids()); updSpeedBtn(); }
+
+function speakFrom(si){
+  if(!P.an.sents.length){ P.token++; return endOfChapter(); }
+  P.si = Math.max(0, Math.min(si, P.an.sents.length - 1));
+  savePos();
+  if(engine() === 'el') elPlayFrom(P.si); else devSpeak(P.si);
+}
+function play(){ if(P.playing) return; P.playing = true; updPlayBtn(); speakFrom(P.si); }
+function pausePlay(){
+  P.playing = false; P.token++;
+  try{ speechSynthesis.cancel(); }catch(e){}
+  P.audio.pause(); cancelAnimationFrame(P.raf); setBusy(false); updPlayBtn(); savePos();
+}
+function nextSentence(){
+  if(!P.playing) return;
+  if(P.si + 1 < P.an.sents.length) speakFrom(P.si + 1); else endOfChapter();
+}
+async function endOfChapter(){
+  const tok = P.token;
+  if(P.sleepMode === -1){ setSleep(0); pausePlay(); toast('Sleep tight 🌙'); return; }
+  if(P.ch + 1 < P.book.chapters.length){
+    if(P.book.kind === 'picture') await sleep(1400); else await sleep(700);
+    if(tok !== P.token || !P.playing) return;
+    openChapter(P.ch + 1, 0); speakFrom(0);
+  } else {
+    pausePlay(); P.book.finished = true; P.book.pos = {ch: 0, si: 0}; dbPut('books', P.book).catch(()=>{});
+    toast(P.book.kind === 'picture' ? 'The End! 🎉' : 'Finished the book 🎉', 4000);
+  }
+}
+
+/* ---------- Phone voice engine ---------- */
+function devSpeak(si){
+  if(!window.speechSynthesis){ pausePlay(); return toast('This browser has no built-in voices — pick an ElevenLabs voice.'); }
+  const tok = ++P.token; speechSynthesis.cancel(); P.audio.pause(); cancelAnimationFrame(P.raf);
+  const s = P.an.sents[si]; hlSent(si); hlWord(s.w0);
+  const u = new SpeechSynthesisUtterance(P.text.slice(s.s, s.e));
+  const v = findDevVoice(); if(v){ try{ u.voice = v; }catch(e){} u.lang = v.lang; } else u.lang = 'en-GB';
+  u.rate = rate();
+  let gotB = false, est = null;
+  u.onboundary = e => { if(tok !== P.token) return; if(e.name && e.name !== 'word') return; gotB = true; clearInterval(est); hlWord(wordAtOffset(P.an, s.s + e.charIndex)); };
+  u.onstart = () => {
+    if(tok !== P.token) return;
+    const t0 = performance.now(), cps = 14.5 * u.rate;
+    est = setInterval(() => { if(gotB || tok !== P.token){ clearInterval(est); return; } hlWord(wordAtOffset(P.an, Math.min(s.e - 1, s.s + (performance.now() - t0) / 1000 * cps))); }, 110);
+  };
+  u.onend = () => { clearInterval(est); if(tok !== P.token || !P.playing) return; nextSentence(); };
+  u.onerror = e => { clearInterval(est); if(tok !== P.token) return; if(e.error === 'interrupted' || e.error === 'canceled') return; setTimeout(() => { if(tok === P.token && P.playing) nextSentence(); }, 250); };
+  // Chrome sometimes drops the very first utterance — a tiny delay after cancel() avoids that
+  setTimeout(() => { if(tok === P.token) speechSynthesis.speak(u); }, 60);
+}
+
+/* ---------- ElevenLabs engine ---------- */
+function buildChunks(an, text){
+  const out = []; let c = null;
+  an.sents.forEach((s, i) => {
+    if(!c){ c = {s: s.s, e: s.e, s0: i, s1: i}; return; }
+    const paraBreak = /\n\n/.test(text.slice(c.e, s.s));
+    if(s.e - c.s > 1300 || (paraBreak && c.e - c.s > 450)){ out.push(c); c = {s: s.s, e: s.e, s0: i, s1: i}; }
+    else { c.e = s.e; c.s1 = i; }
+  });
+  if(c) out.push(c);
+  return out;
+}
+function elKey(){ return store.get('elKey', ''); }
+function elModel(){ return store.get('elModel', 'eleven_multilingual_v2'); }
+function elErr(status, m){
+  if(status === 401) return 'ElevenLabs didn\'t accept the key — check it in Settings (it needs Text to Speech permission).';
+  if(status === 402 || /quota|credits|character/i.test(m)) return 'ElevenLabs says you\'re out of characters for this month.';
+  if(status === 429) return 'ElevenLabs is busy — try again in a moment.';
+  return 'ElevenLabs: ' + (m || ('error ' + status));
+}
+const memCache = new Map();
+function b64ToBytes(b){ const s = atob(b); const a = new Uint8Array(s.length); for(let i = 0; i < s.length; i++) a[i] = s.charCodeAt(i); return a; }
+function getElChunk(bookId, chIdx, text, c, voiceId){
+  const txt = text.slice(c.s, c.e), model = elModel();
+  const key = `${bookId}|${chIdx}|${voiceId}|${model}|${hash(txt)}`;
+  if(memCache.has(key)) return memCache.get(key);
+  const p = (async () => {
+    let rec = null; try{ rec = await dbGet('audio', key); }catch(e){}
+    if(rec) return rec;
+    const body = {text: txt, model_id: model};
+    const prev = text.slice(Math.max(0, c.s - 300), c.s).trim(), next = text.slice(c.e, c.e + 300).trim();
+    if(prev) body.previous_text = prev; if(next) body.next_text = next;
+    const r = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(voiceId)}/with-timestamps?output_format=mp3_44100_128`, {
+      method: 'POST', headers: {'xi-api-key': elKey(), 'Content-Type': 'application/json'}, body: JSON.stringify(body)
+    });
+    if(!r.ok){ let m = ''; try{ const d = await r.json(); m = (d.detail && (d.detail.message || d.detail.status)) || (typeof d.detail === 'string' ? d.detail : JSON.stringify(d.detail || d)); }catch(e){} throw new Error(elErr(r.status, m)); }
+    const d = await r.json();
+    const al = d.alignment || d.normalized_alignment || {characters: [], character_start_times_seconds: []};
+    rec = {key, book: bookId, blob: new Blob([b64ToBytes(d.audio_base64)], {type: 'audio/mpeg'}), starts: al.character_start_times_seconds || [], n: (al.characters || []).length, len: txt.length};
+    try{ await dbPut('audio', rec); }catch(e){}
+    return rec;
+  })();
+  memCache.set(key, p); p.catch(() => memCache.delete(key));
+  return p;
+}
+function timeAtOffset(rec, off){ if(!rec.n) return 0; const i = Math.min(rec.n - 1, Math.max(0, Math.round(off * rec.n / rec.len))); return rec.starts[i] || 0; }
+function offsetAtTime(rec, t){
+  const st = rec.starts; if(!st.length) return 0; let lo = 0, hi = st.length - 1, ans = 0;
+  while(lo <= hi){ const m = (lo + hi) >> 1; if(st[m] <= t){ ans = m; lo = m + 1; } else hi = m - 1; }
+  return Math.round(ans * rec.len / rec.n);
+}
+async function elPlayFrom(si){
+  const tok = ++P.token; try{ speechSynthesis.cancel(); }catch(e){}
+  cancelAnimationFrame(P.raf);
+  const ci = Math.max(0, P.chunks.findIndex(c => si >= c.s0 && si <= c.s1));
+  const c = P.chunks[ci]; hlSent(si); hlWord(P.an.sents[si].w0);
+  const voiceId = currentVoice().slice(3);
+  let rec;
+  setBusy(true, 'Getting the voice ready…');
+  try{ rec = await getElChunk(P.book.id, P.ch, P.text, c, voiceId); }
+  catch(e){ if(tok === P.token){ setBusy(false); pausePlay(); toast(e.message, 6000); } return; }
+  if(tok !== P.token) return;
+  setBusy(false);
+  P.ci = ci; P.rec = rec;
+  if(P.audioUrl) URL.revokeObjectURL(P.audioUrl);
+  P.audioUrl = URL.createObjectURL(rec.blob);
+  const a = P.audio; a.src = P.audioUrl; a.playbackRate = rate();
+  await new Promise(r => { a.onloadedmetadata = r; setTimeout(r, 1500); });
+  if(tok !== P.token) return;
+  try{ a.currentTime = Math.max(0, timeAtOffset(rec, P.an.sents[si].s - c.s) - 0.05); }catch(e){}
+  a.playbackRate = rate();
+  a.onended = () => {
+    if(tok !== P.token || !P.playing) return;
+    if(P.sleepT === 'due'){ setSleep(0); pausePlay(); return; }
+    if(ci + 1 < P.chunks.length) speakFrom(P.chunks[ci + 1].s0); else endOfChapter();
+  };
+  try{ await a.play(); }catch(e){ if(tok === P.token){ pausePlay(); toast('Tap ▶ to start'); } return; }
+  const step = () => {
+    if(tok !== P.token) return;
+    const off = c.s + offsetAtTime(rec, a.currentTime);
+    const wi = wordAtOffset(P.an, off), s2 = P.an.words[wi].si;
+    if(s2 !== P.si){ P.si = s2; savePos(); }
+    hlSent(s2); hlWord(wi);
+    P.raf = requestAnimationFrame(step);
+  };
+  P.raf = requestAnimationFrame(step);
+  // get the next part ready while this one plays
+  if(ci + 1 < P.chunks.length) getElChunk(P.book.id, P.ch, P.text, P.chunks[ci + 1], voiceId).catch(()=>{});
+}
+
+/* ---------- Controls ---------- */
+$('pPlay').onclick = () => { if(P.playing) pausePlay(); else play(); };
+$('pPrev').onclick = () => { const n = Math.max(0, P.si - 1); if(P.playing) speakFrom(n); else { P.si = n; hlSent(n); hlWord(P.an.sents[n] ? P.an.sents[n].w0 : 0); savePos(); } };
+$('pNext').onclick = () => { if(P.si + 1 >= P.an.sents.length){ if(P.ch + 1 < P.book.chapters.length){ openChapter(P.ch + 1, 0); if(P.playing) speakFrom(0); } return; } const n = P.si + 1; if(P.playing) speakFrom(n); else { P.si = n; hlSent(n); hlWord(P.an.sents[n].w0); savePos(); } };
+$('pChap').onchange = () => { const was = P.playing; pausePlay(); openChapter(+$('pChap').value, 0); savePos(); if(was) play(); };
+$('pNextCh').onclick = () => { const was = P.playing; pausePlay(); openChapter(P.ch + 1, 0); savePos(); if(was) play(); };
+$('pEdit').onclick = () => { pausePlay(); openEditor(P.book, false); };
+$('pSpeed').onclick = () => {
+  const k = kids() ? 'kidRate' : 'rate'; const cur = rate();
+  let i = SPEEDS.findIndex(s => s > cur + 0.001); if(i < 0) i = 0;
+  store.set(k, String(SPEEDS[i])); updSpeedBtn();
+  if(engine() === 'el') P.audio.playbackRate = rate(); else if(P.playing) speakFrom(P.si);
+};
+$('pKids').onclick = () => {
+  document.body.classList.toggle('kids'); P.book.kids = kids(); savePos(); updKidsBtn();
+  if(P.curWord >= 0) hlWord(P.curWord, true);
+  if(P.playing){ if(engine() === 'el') P.audio.playbackRate = rate(); else speakFrom(P.si); }
+  toast(kids() ? 'Kids mode: big words — tap any word to hear it' : 'Kids mode off');
+};
+$('reader').onclick = e => {
+  const w = e.target.closest('.w'); if(!w) return;
+  const wi = +w.dataset.i, si = P.an.words[wi].si;
+  if(kids()){
+    // say just this word
+    if(P.playing) pausePlay();
+    hlSent(si); hlWord(wi, true); P.si = si; savePos();
+    if(!window.speechSynthesis) return;
+    speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(P.an.words[wi].t.replace(/[^\p{L}\p{N}'’-]/gu, ''));
+    const v = findDevVoice(); if(v){ try{ u.voice = v; }catch(e){} u.lang = v.lang; } u.rate = 0.75;
+    setTimeout(() => speechSynthesis.speak(u), 40);
+  } else {
+    P.si = si; hlSent(si); hlWord(P.an.sents[si].w0, true); savePos();
+    if(P.playing) speakFrom(si);
+  }
+};
+function setSleep(mode){
+  P.sleepMode = mode; if(P.sleepT && P.sleepT !== 'due') clearTimeout(P.sleepT); P.sleepT = null;
+  $('pSleep').textContent = mode === 0 ? '🌙 Off' : mode === -1 ? '🌙 End of ch' : '🌙 ' + mode + 'm';
+  $('pSleep').classList.toggle('on', mode !== 0);
+  if(mode > 0) P.sleepT = setTimeout(() => {
+    // finish the current sentence/part gently, then stop
+    if(engine() === 'el') P.sleepT = 'due'; else { P.sleepT = null; const tok = P.token; const chk = setInterval(() => { if(tok !== P.token || !speechSynthesis.speaking){ clearInterval(chk); pausePlay(); setSleep(0); toast('Sleep tight 🌙'); } }, 300); }
+  }, mode * 60000);
+}
+$('pSleep').onclick = () => { const i = (SLEEPS.indexOf(P.sleepMode) + 1) % SLEEPS.length; setSleep(SLEEPS[i]); if(SLEEPS[i]) toast(SLEEPS[i] === -1 ? 'Stops at the end of this chapter' : 'Stops after ' + SLEEPS[i] + ' minutes'); };
+function setMedia(){
+  if(!('mediaSession' in navigator) || !P.book) return;
+  try{
+    const art = P.book.chapters[P.ch].img || P.book.cover;
+    navigator.mediaSession.metadata = new MediaMetadata({title: P.book.chapters[P.ch].title, artist: P.book.title, album: 'Read To Me', artwork: art ? [{src: art, sizes: '512x512', type: 'image/jpeg'}] : [{src: 'icon-512.png', sizes: '512x512', type: 'image/png'}]});
+    navigator.mediaSession.setActionHandler('play', play);
+    navigator.mediaSession.setActionHandler('pause', pausePlay);
+    navigator.mediaSession.setActionHandler('previoustrack', () => $('pPrev').click());
+    navigator.mediaSession.setActionHandler('nexttrack', () => $('pNext').click());
+  }catch(e){}
+}
+
+/* ---------- MP3 download ---------- */
+$('pDl').onclick = e => {
+  e.stopPropagation();
+  if(engine() !== 'el') return toast('MP3 downloads need an ElevenLabs voice — pick one from the voice list (set it up in Settings).', 5000);
+  closeMenus();
+  const m = document.createElement('div'); m.className = 'menu';
+  m.innerHTML = `<button data-a="ch">⬇️ This ${P.book.kind === 'picture' ? 'page' : 'chapter'}</button><button data-a="all">⬇️ Whole book (one file)</button>`;
+  document.body.appendChild(m);
+  const r = $('pDl').getBoundingClientRect(); m.style.left = Math.min(r.left, innerWidth - 220) + 'px'; m.style.top = (r.top - 100) + 'px';
+  m.onclick = e => { const a = e.target.dataset.a; closeMenus(); if(a) exportMp3(a === 'all'); };
+};
+async function exportMp3(all){
+  pausePlay();
+  const b = P.book, voiceId = currentVoice().slice(3);
+  const idxs = all ? b.chapters.map((_, i) => i) : [P.ch];
+  const jobs = [];
+  idxs.forEach(i => { const t = b.chapters[i].text || ''; const an = analyse(t); buildChunks(an, t).forEach(c => jobs.push({i, t, c})); });
+  if(!jobs.length) return toast('No text to turn into audio');
+  const chars = jobs.reduce((n, j) => n + (j.c.e - j.c.s), 0);
+  if(!confirm(`This makes about ${chars.toLocaleString()} characters of ElevenLabs audio (parts you've already listened to are reused for free). Carry on?`)) return;
+  openOverlay('Making your MP3');
+  const parts = [];
+  try{
+    for(let k = 0; k < jobs.length; k++){
+      if(ovCancelled) return;
+      setOverlay(null, k / jobs.length, `Part ${k + 1} of ${jobs.length}`);
+      const rec = await getElChunk(b.id, jobs[k].i, jobs[k].t, jobs[k].c, voiceId);
+      parts.push(rec.blob);
+    }
+  }catch(e){ closeOverlay(); return toast(e.message, 6000); }
+  closeOverlay();
+  const name = (b.title + (all ? '' : ' - ' + b.chapters[P.ch].title)).replace(/[\\/:*?"<>|]+/g, '').slice(0, 90) + '.mp3';
+  const url = URL.createObjectURL(new Blob(parts, {type: 'audio/mpeg'}));
+  const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  toast('Saved ' + name);
+}
+
+/* =========================================================
+   Settings
+   ========================================================= */
+function loadSettings(){
+  $('sElKey').value = elKey(); $('sElModel').value = elModel();
+  $('sGemKey').value = store.get('gemKey', '');
+  let shared = ''; try{ shared = localStorage.getItem('ss_key') || ''; }catch(e){}
+  $('sGemShared').textContent = !store.get('gemKey', '') && shared ? '✓ Using the Gemini key you saved in Style Studio. Paste a different one here to override it.' : '';
+  $('sGemModel').value = gemModel();
+  $('sKidSize').value = parseInt(store.get('kidSize', '30')); $('sKidSample').style.fontSize = $('sKidSize').value + 'px';
+  $('sKidRate').value = store.get('kidRate', '0.8'); $('sKidRateLbl').textContent = $('sKidRate').value + '× speed';
+  fillVoiceSelects();
+}
+$('sDevVoice').onchange = () => { const v = $('sDevVoice').value; store.set('devVoice', v.slice(4)); if(engine() === 'dev') store.set('voice', v); };
+$('sDevTest').onclick = () => { if(!window.speechSynthesis) return toast('No built-in voices in this browser'); speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('Hello! Once upon a time, there was a very hungry little dragon.'); const v = findDevVoice(); if(v){ try{ u.voice = v; }catch(e){} u.lang = v.lang; } speechSynthesis.speak(u); };
+$('sElSave').onclick = async () => {
+  const k = $('sElKey').value.trim(); store.set('elKey', k); store.set('elModel', $('sElModel').value);
+  const st = $('sElStatus');
+  if(!k){ store.set('elVoices', '[]'); fillVoiceSelects(); st.className = 'status'; st.textContent = 'Key removed.'; return; }
+  st.className = 'status'; st.textContent = 'Checking…';
+  try{
+    const r = await fetch('https://api.elevenlabs.io/v1/voices', {headers: {'xi-api-key': k}});
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok) throw new Error(elErr(r.status, (d.detail && d.detail.message) || ''));
+    const vs = (d.voices || []).map(v => ({id: v.voice_id, name: v.name, cat: v.category}));
+    store.set('elVoices', JSON.stringify(vs)); fillVoiceSelects();
+    const mine = vs.filter(v => ['cloned', 'generated', 'professional'].includes(v.cat)).length;
+    st.className = 'status ok'; st.textContent = `✓ Key works — ${vs.length} voices loaded${mine ? ` (${mine} of your own ⭐)` : ''}. Pick one from the voice list in the player.`;
+  }catch(e){ st.className = 'status err'; st.textContent = e.message; }
+};
+$('sGemSave').onclick = async () => {
+  store.set('gemKey', $('sGemKey').value.trim()); store.set('gemModel', $('sGemModel').value.trim() || 'gemini-3.8-flash');
+  const st = $('sGemStatus'), k = geminiKey();
+  if(!k){ st.className = 'status'; st.textContent = 'No key — the free reader will be used.'; return; }
+  st.className = 'status'; st.textContent = 'Checking…';
+  try{
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=200', {headers: {'x-goog-api-key': k}});
+    const d = await r.json().catch(() => ({}));
+    if(!r.ok) throw new Error((d.error && d.error.message) || r.status);
+    const names = (d.models || []).map(m => m.name.replace('models/', ''));
+    const ok = names.includes(gemModel());
+    st.className = 'status ' + (ok ? 'ok' : 'err');
+    st.textContent = ok ? '✓ Key works and the model is available.' : `Key works, but "${gemModel()}" isn't in your list. Try one of: ${names.filter(n => /flash/.test(n)).slice(0, 4).join(', ')}`;
+  }catch(e){ st.className = 'status err'; st.textContent = 'That key didn\'t work: ' + e.message; }
+  loadSettings(); setOcr(ocrEngine);
+};
+$('sKidSize').oninput = () => { store.set('kidSize', $('sKidSize').value); document.documentElement.style.setProperty('--kidsize', $('sKidSize').value + 'px'); $('sKidSample').style.fontSize = $('sKidSize').value + 'px'; };
+$('sKidRate').oninput = () => { store.set('kidRate', $('sKidRate').value); $('sKidRateLbl').textContent = $('sKidRate').value + '× speed'; };
+$('sClearAudio').onclick = async () => { if(!confirm('Delete all saved ElevenLabs audio? (Books are kept.)')) return; await dbClear('audio'); memCache.clear(); $('sStoreStatus').className = 'status ok'; $('sStoreStatus').textContent = 'Saved audio cleared.'; };
+$('sSample').onclick = addSample;
+
+/* =========================================================
+   Sample story (an original retelling of an Aesop fable)
+   ========================================================= */
+async function addSample(){
+  const pages = [
+    'Once upon a time, in a sunny green meadow, lived a hare who was very, very fast. "Nobody can beat me!" he said to everyone he met.',
+    'One morning, a slow old tortoise looked up from his lettuce. "I will race you," he said with a smile. All the animals gasped.',
+    'Off they went! The hare zoomed away like the wind. Soon the tortoise was just a tiny dot far behind him.',
+    '"This is too easy," yawned the hare. He lay down under a shady tree. "I will have a little nap," he said, and he closed his eyes.',
+    'Step by step, the tortoise kept going. He did not stop. He did not rush. He just kept on going, slow and steady.',
+    'The hare woke up with a jump! He ran as fast as he could. But the tortoise was already crossing the finish line.',
+    'All the animals cheered. "Slow and steady wins the race," said the tortoise. And the hare never boasted again. The End.'
+  ];
+  const b = {id: uid(), title: 'The Tortoise and the Hare', kind: 'picture', created: Date.now(), cover: null,
+             chapters: pages.map((t, i) => ({title: 'Page ' + (i + 1), text: t}))};
+  await dbPut('books', b);
+  toast('Added "The Tortoise and the Hare"');
+  viewStack = ['vLibrary']; openPlayer(b.id);
+}
+
+/* =========================================================
+   Start
+   ========================================================= */
+document.documentElement.style.setProperty('--kidsize', store.get('kidSize', '30') + 'px');
+show('vLibrary', true);
+if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
